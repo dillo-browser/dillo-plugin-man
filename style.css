@@ -1,0 +1,31 @@
+body {
+	width: 40em;
+	margin: 2em;
+	font-size: 18px;
+	line-height: 1.4em;
+	background-color: white
+}
+
+h1 {
+	padding-bottom: 0.5em;
+}
+
+pre {
+	background-color: #f4f4f4;
+	padding: 1em;
+}
+
+table {
+	border: 1px;
+}
+
+.head {
+	font-size: 16px;
+	font-weight: bold;
+	background-color: #e7e7e7;
+	padding: 0.5em;
+}
+
+p {
+	 /*text-align: justify;*/
+}

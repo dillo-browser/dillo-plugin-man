@@ -1,0 +1,71 @@
+#!/bin/bash
+# Copyright (c) 2023 Rodrigo Arias Mallo
+# SPDX-License-Identifier: GPL-3.0-or-later
+
+IFS= read -d '>' auth # Ignore auth
+IFS= read -d '>' cmd
+
+case "$cmd" in
+  "<cmd='open_url' url='"*);;
+  *) echo $cmd; exit;;
+esac
+
+url=${cmd#"<cmd='open_url' url='"}
+url=${url%"' '"}
+
+serve_404() {
+  printf "<cmd='start_send_page' url='' '>\n"
+  printf "Content-type: text/plain\r\n\r\n"
+  $manpage="$1"
+  $apropos="$2"
+  if [ -z "$1" ]; then
+    echo "Not found"
+    exit 0
+  fi
+  echo "Manual page not found: $1"
+  if [ -n "$apropos" ]; then
+    printf "\nRelated pages:\n"
+    man -k "$apropos"
+  fi
+}
+
+inject_css() {
+  css=$(cat "$(dirname $(readlink -f $0))/style.css" | tr '\n' ' ')
+  sed "s_</style>_$css\n</style>_"
+}
+
+link_xrefs() {
+  # Link references to other pages to a man:xyz link
+
+  # <a class="Xr">mandoc(1)</a>
+  sed 's_<a class="Xr">\([^<]*\)</a>_<a href="man:\1" class="Xr">\1</a>_g' |
+  # <b>bzip2</b>(1)
+  sed 's_<b>\([^<]*\)</b>(\([0-9][^)]*\))_<a href="man:\1(\2)" class="Xr">\1(\2)</a>_g' |
+  # <i>nroff</i>(1)
+  sed 's_<i>\([^<]*\)</i>(\([0-9][^)]*\))_<a href="man:\1(\2)" class="Xr">\1(\2)</a>_g'
+}
+
+serve_manpage() {
+  url="$1"
+  ref="${url#"man:"}"
+  # Reverse open(3) -> 3 open if given
+  manpage=$(echo "$ref" | sed 's/\(.*\)(\(.*\))/\2 \1/')
+  # If page not found, return 404
+  if [ -z "$manpage" ]; then
+    serve_404
+    exit 0
+  fi
+  if ! man -w $manpage 2>/dev/null; then
+    apropos=$(echo "$ref" | sed 's/(.*)//')
+    serve_404 "$manpage" "$apropos"
+  else
+    printf "<cmd='start_send_page' url='' '>\n"
+    printf "Content-type: text/html\r\n\r\n"
+    man -T html $manpage | inject_css | link_xrefs 2>&1
+  fi
+}
+
+case "$url" in
+  man:*) serve_manpage "$url";;
+  *) serve_404;;
+esac
