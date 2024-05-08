@@ -45,6 +45,11 @@ link_xrefs() {
   sed 's_<i>\([^<]*\)</i>(\([0-9][^)]*\))_<a href="man:\1(\2)" class="Xr">\1(\2)</a>_g'
 }
 
+fix_br() {
+  # Line breaks <br> inside <pre> show duplicated breaks
+  awk '/<pre>/ {inpre=1}; inpre && / *<br\/>$/ { next }; /<\/pre>/ { inpre=0 } { print }'
+}
+
 serve_manpage() {
   url="$1"
   ref="${url#"man:"}"
@@ -62,7 +67,7 @@ serve_manpage() {
     printf "<cmd='start_send_page' url='' '>\n"
     printf "Content-type: text/html\r\n\r\n"
     unset MANROFFOPT
-    man -Thtml $manpage | inject_css | link_xrefs 2>&1
+    man -Thtml $manpage | fix_br | inject_css | link_xrefs 2>&1
   fi
 }
 
