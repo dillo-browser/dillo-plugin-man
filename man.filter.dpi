@@ -16,8 +16,8 @@ url=${url%"' '"}
 serve_404() {
   printf "<cmd='start_send_page' url='' '>\n"
   printf "Content-type: text/plain\r\n\r\n"
-  $manpage="$1"
-  $apropos="$2"
+  manpage="$1"
+  apropos="$2"
   if [ -z "$1" ]; then
     echo "Not found"
     exit 0
