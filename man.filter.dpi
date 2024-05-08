@@ -61,6 +61,7 @@ serve_manpage() {
   else
     printf "<cmd='start_send_page' url='' '>\n"
     printf "Content-type: text/html\r\n\r\n"
+    unset MANROFFOPT
     man -Thtml $manpage | inject_css | link_xrefs 2>&1
   fi
 }
