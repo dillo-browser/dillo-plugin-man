@@ -1,5 +1,5 @@
 #!/bin/bash
-# Copyright (c) 2023 Rodrigo Arias Mallo
+# Copyright (c) 2023-2025 Rodrigo Arias Mallo
 # SPDX-License-Identifier: GPL-3.0-or-later
 
 IFS= read -d '>' auth # Ignore auth
@@ -53,15 +53,17 @@ fix_br() {
 serve_manpage() {
   url="$1"
   ref="${url#"man:"}"
+  # Remove #<frag> fragment if any
+  cleanref=$(echo "$ref" | sed 's/#.*$//')
   # Reverse open(3) -> 3 open if given
-  manpage=$(echo "$ref" | sed 's/\(.*\)(\(.*\))/\2 \1/')
+  manpage=$(echo "$cleanref" | sed 's/\(.*\)(\(.*\))/\2 \1/')
   # If page not found, return 404
   if [ -z "$manpage" ]; then
     serve_404
     exit 0
   fi
   if ! man -w $manpage 2>/dev/null; then
-    apropos=$(echo "$ref" | sed 's/(.*)//')
+    apropos=$(echo "$cleanref" | sed 's/(.*)//')
     serve_404 "$manpage" "$apropos"
   else
     printf "<cmd='start_send_page' url='' '>\n"
