@@ -62,7 +62,7 @@ serve_manpage() {
     serve_404
     exit 0
   fi
-  if ! man -w $manpage 2>/dev/null; then
+  if ! man -w $manpage >/dev/null; then
     apropos=$(echo "$cleanref" | sed 's/(.*)//')
     serve_404 "$manpage" "$apropos"
   else
